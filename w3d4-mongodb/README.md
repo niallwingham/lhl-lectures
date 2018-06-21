@@ -1,191 +1,96 @@
-# State, Persistence, DBMS and MongoDB
+Thank you for joining me on an exciting/terrifying journey into the world of databases!  All the code and notes you saw today are posted on my github [here](https://github.com/niallwingham/lhl-lectures/tree/master/w3d4-mongodb).
 
-Credit where credit is due: the following lecture notes and example app were heavily based on [Khurram Virani's original notes](https://github.com/kvirani/express_mongo_todo_example) (thanks!).
+`<Congratulations>`
 
-The final Express/Mongo app discussed in class can be found in [`/code`](https://github.com/jugonzal/lhl-lectures/tree/master/w3d4-mongodb/code).
+🎉🎉 At this point you know how to make a web user interface (HTML/CSS/JavaScript), a web server (Node/JavaScript), and now a database (MongoDB).  This officially makes you a _full stack web developer!_ 🎉🎉
 
-
-
-## Topics covered (Summary)
-
-* Intro to databases (Why)
-* Intro to MongoDB
-  * What is document storage?
-  * How it uses JavaScript
-  * The data model
-    * Server -> Databases -> Collections -> Docs
-  * The mongo Shell
-    * Using it for debugging by inspecting the data
-  * Demo basic functions (subset of CRUD)
-* MongoDB from Node
-  * How it relates to what we see in the shell
-  * client vs server model with mongo in the picture
+`</Congratulations>`
 
 
-## Introduction
+Your **Key Learning Objectives** today were:
 
-### Without actual databases
+### 1. Why do we need databases?
 
-Currently in our project we have a "global" object in memory to track our shortened URL records:
+Web servers are stateless.  We need databases to store state for our applications.  State is everthing the application knows, e.g. user accounts, friendships, and posts.
 
-```javascript
-const data = {
-  users: [
-    { name: "Juan", age: 116 },
-    { name: "Someone else", age: 25 }
-  ]
-}
+### 2. What is MongoDB?
+
+MongoDB is a document database.  A **document** is similar to a JavaScript object.  Documents are stored in **collections** which are stored in **databases**.
+
+### 3. How do you use MongoDB?
+
+A database runs on a **server** and you connect to it using a **client**.  A client can be a command line (the `mongo` command) or an application (e.g. a JavaScript application using the `mongodb` package).
+
+#### Starting the server
+
+```bash
+# Just run the "mongod" command!
+niall$ mongod
 ```
 
-The biggest problem is that this data goes away when we restart our node process (something that we must assume can happen any time for many reasons).
+#### Connecting on the command line
 
-This happens because the data is being stored IN MEMORY and not ON DISK.
+```bash
+# Connect using the "mongo" command, which opens a "mongo shell" connected to the server
+niall$ mongo
 
-Memory is (meant to be) volatile storage whereas disk (file system) is long term storage.
+# Show the available databases
+> show dbs
+admin   0.000GB
+config  0.000GB
 
-We need to serialize and persist this object to  disk ("file system").
+# Select a database to use (may be a new one)
+> use lhl
 
-Either binary or text files are often used to store long term info.
+# Show the collections in this database
+> show collections
 
-Ideally our app will persist this object on disk and then read/write from that file.
+# No collections yet!  Start by inserting some data.
+> db.people.insertMany([
+  { name: 'Niall', age: 29 },
+  { name: 'Nyla', age: 28 },
+  { name: 'Inara', age: 1 },
+])
 
-### Flat text files
-
-Flat text files (like CSV files) are the simplest but least powerful approach.
-
-CSV stands for Comma separated values. It's a text file that has each record on one line separated by commas. There is no hierarchy to the file, hence "flat".
-
-```
-"abc", "http://"
-"def", "http://"
-```
-
-### JSON (or similar) format files
-
-Another example of a textual file that can store our data is a `json` file. JSON is another approach to serializing our data (for purposes of storage or transmission), and isn't totally flat (has nested objects, etc) which is great... but doesn't solve other more critical challenges.
-
-Example of a JSON file:
-
-```javascript
-{
-  "abc": "http://",
-  "def": "http://"
-}
+# Let's exit the shell for now
+> exit
 ```
 
-#### Challenges
+#### Connecting from JavaScript
 
-Challenges with storing and managing our own text (CSV, JSON, etc) files for user data:
+```js
+// Import the "mongodb" package we have installed with npm
+const MongoClient = require('mongodb').MongoClient;
 
-- Too much work on the app developer to work with this file (Open, Read, Write, etc)
-- No way to easily search data by criteria
-- Concurrency: multiple apps/processes can't read/write the file without causing inconsistency. Web apps can have many users CRUDing data and so we need to be able to read/write concurrently without problems.
+// Connect to the database server
+MongoClient.connect('mongodb://localhost:27017', function (error, client) {
 
-For reasons above, text files are not used for application data BUT are used for static / non-user data like configuration settings:
+  // Once connected, select a database and collection to use
+  const db = client.db('lhl');
+  const peopleCollection = db.collection('people');
 
-Examples:
+  // Find the people we inserted on the command line
+  peopleCollection.find({}).toArray(function (error, peopleDocuments) {
 
-- NPM has `package.json`
-- Git has `.gitignore` and others
-- For app settings we used a simple `.env` key-value file
+    // Once the data is returned by the server, log it to the console
+    // (This will be a plain JavaScript array of JavaScript objects)
+    console.log(peopleDocuments);
 
-
-### Enter MongoDB (or other alternatives)
-
-MongoDB is a document storage database. It has blown up big time in the last in the Node community, becoming a popular option for many projects.
-
-MongoDB is open source (like everything we use/teach here). It is a non-relational db and is more of an object store (objects are referred to as "documents").
-
-The major components of Mongo are:
-
-```
-- Databases (Most apps usually have one)
-  - Collections (think of it like an Array)
-    - Documents (JS Objects with _id's)
+    // Close the database connection
+    client.close();
+  });
+});
 ```
 
-A Mongo server has many Databases which have many collections within and these collections within have many documents.
+### 4. How do we implement "CRUD" with MongoDB?
 
-We can store whatever we want in the documents. Here is an visual example of a todo app's mongo database, so we can see how we would use these different entities / layers to structure the data for an app like the one we are building this week:
+Some common operations are:
 
-```
-- Database: my_db
-  - Collection: todos
-    - Doc: {desc: '...', completed: true}
-    - Doc: {desc: '...', completed: false}
-    - Doc: {desc: '...', completed: true}
-  - Collection: users
-    - Doc: {username: 'kvirani', ...}
-    - Doc: {username: 'rafd', ...}
-    - Doc: {username: 'pjama', ...}
-```
+* `insertOne` and `insertMany` to "create"
+* `findOne` and `findMany` to "read"
+* `replaceOne`, `updateOne`, and `updateMany` to "update"
+* `deleteOne` and `deleteMany` to "delete"
 
-## Demo 1: Mongo shell / REPL
+You can read more about them [here](https://docs.mongodb.com/manual/crud/) and see a full reference of mongo commands [here](https://docs.mongodb.com/manual/reference/method/#collection).
 
-We went over the mongo shell. Here are the commands we ran:
-
-```javascript
-show dbs
-use users
-show collections
-db.users.find()
-db.users.insert(
-  { name: "Juan", age: 116, projects: [
-    { id: "P1", eval: "L4"},         
-    { id: "P2", eval: "L3"}         
-    ] 
-  }
-)
-db.users.insert(
-  { name: "You", age: 16, projects: [
-    { id: "P1", eval: "L2"},         
-    { id: "P2", eval: "L4"}         
-    ] 
-  }
-)
-db.users.find()
-db.users.find().pretty()
-db.users.find({name: "Juan"}).pretty()
-db.users.find({'projects.eval': "L4"}).pretty()
-db.users.find({'projects.eval': "L4"}).limit(1).pretty()
-
-```
-
-We talked about how:
-
-- Mongo is very JS-centric. Most of the code we see in the shell above is JS code!
-- Mongo has "transactional" functions on collections to allow us to CRUD (Create Read Update Delete) documents within those collections.
-- There are many other functions that you can look up in the documentation (how to search, insert multiple, batch delete, batch update, etc, etc)
-- Collections can just be viewed as properties of the `db` object (`db.todos` can also be written as `db.collection('todos')`) therefore their name is what uniquely identify them.
-- Mongo assigns an `_id` key/property to any document so we can uniquely identify it. More on this below.
-
-## Primary Key
-
-The `_id` is a "Primary Key" that uniquely identifies each object (document) within our collections.
-
-It is automatically added to any object we insert and we can use it to find single object from a collection (see example above).
-
-## Demo 2: Simple Todo List (Express app w/ Mongo)
-
-We walked through the Todo Node/Express app which only has index, new/create and delete functionality. It uses Mongo as its data store and we went through the `app.js` file in detail to see how it does it.
-
-### The `dbInstance` (db connection)
-
-We see that our node app connects to a specific MongoDB database when it starts and there is a single connection passed into all the other helper functions like `insert`, `remove` and `getAll`
-
-### Client vs Server
-
-So far, we're used to seeing our node / express app as a Server when it comes to HTTP requests from the browser (Client).
-
-In terms of data access and Mongo, the node/express app is actually the Client and Mongo is the Server.
-
-```
-Browser      (Client) <> Node/Express (Server)
-Node/Express (Client) <> MongoDB (Server)
-```
-
-So together we have:
-
-```
-Browser      (Client) <> Node/Express (< Server / Client >) <> MongoDB (Server)
-```
+Also remember that for "updating" there are two styles: `replaceOne` lets you change the entire document at once by passing a new, complete version of the document.  `updateOne` and `updateMany` lets you do more fine-grained operations by passing in an object that represents _instructions_ for updating the document, like `{ $set: { age: 30 } }`.

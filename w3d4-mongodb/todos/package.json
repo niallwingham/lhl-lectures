@@ -1,0 +1,15 @@
+{
+  "name": "todos",
+  "version": "1.0.0",
+  "description": "A simple TODO list with MongoDB",
+  "main": "todo.js",
+  "scripts": {
+    "start": "node todo.js"
+  },
+  "author": "Niall Wingham",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "mongodb": "^3.0.10"
+  }
+}
