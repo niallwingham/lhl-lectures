@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS albums CASCADE;
 DROP TABLE IF EXISTS tracks CASCADE;
 DROP TABLE IF EXISTS tags CASCADE;
 DROP TABLE IF EXISTS artists_tags CASCADE;
-DROP TABLE IF EXISTS plays CASCADE;
 
 CREATE TABLE artists (
   id SERIAL PRIMARY KEY NOT NULL,
@@ -11,10 +10,10 @@ CREATE TABLE artists (
 );
 
 CREATE TABLE albums (
-  id SERIAL PRIMARY KEY NOT NULL,
-  title VARCHAR(50) NOT NULL,
-  year INTEGER NOT NULL,
-  artist_id INTEGER NOT NULL REFERENCES artists(id) ON DELETE CASCADE
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(50),
+  year INTEGER,
+  artist_id INTEGER REFERENCES artists(id)
 );
 
 CREATE TABLE tracks (
@@ -24,33 +23,27 @@ CREATE TABLE tracks (
   album_id INTEGER NOT NULL REFERENCES albums(id) ON DELETE CASCADE
 );
 
-CREATE TABLE tags (
+CREATE TABLE genres (
   id SERIAL PRIMARY KEY NOT NULL,
-  name VARCHAR(50) NOT NULL
+  name VARCHAR(50) NOT NULL,
+  created_at DATE DEFAULT NOW()
 );
 
-CREATE TABLE artists_tags (
+CREATE TABLE artists_genres (
   artist_id INTEGER NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
-  tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE
+  tag_id INTEGER NOT NULL REFERENCES genres(id) ON DELETE CASCADE
 );
 
-CREATE TABLE plays (
-  id SERIAL PRIMARY KEY NOT NULL,
-  count INTEGER NOT NULL,
-  track_id INTEGER NOT NULL REFERENCES tracks(id) ON DELETE CASCADE
-);
+INSERT INTO "genres" (id, name) VALUES(1, 'post-rock');
+INSERT INTO "genres" (id, name) VALUES(2, 'instrumental');
+INSERT INTO "genres" (id, name) VALUES(3, 'electronic');
+INSERT INTO "genres" (id, name) VALUES(4, 'dance');
+INSERT INTO "genres" (id, name) VALUES(5, 'jazz');
 
+INSERT INTO "artists" (name) VALUES('Explosions in the Sky');
 
-INSERT INTO "tags" (id, name) VALUES(1, 'post-rock');
-INSERT INTO "tags" (id, name) VALUES(2, 'instrumental');
-INSERT INTO "tags" (id, name) VALUES(3, 'electronic');
-INSERT INTO "tags" (id, name) VALUES(4, 'dance');
-INSERT INTO "tags" (id, name) VALUES(5, 'jazz');
-
-INSERT INTO "artists" (id, name) VALUES(1, 'Explosions in the Sky');
-
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(1,1);
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(1,2);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(1,1);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(1,2);
 
 INSERT INTO "albums" (id, title, year, artist_id) VALUES(1, 'The Earth is not a Cold Dead Place', 2003, 1);
 
@@ -71,8 +64,8 @@ INSERT INTO "tracks" (title, number, album_id) VALUES ('So Long, Lonesome', 6, 2
 
 INSERT INTO "artists" (id, name) VALUES(2, 'God is an Astronaut');
 
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(2,1);
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(2,2);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(2,1);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(2,2);
 
 INSERT INTO "albums" (id, title, year, artist_id) VALUES (3, 'All is Violent, All is Bright', 2005, 2);
 
@@ -89,8 +82,8 @@ INSERT INTO "tracks" (title, number, album_id) VALUES ('When Everything Dies', 1
 
 INSERT INTO "artists" (id, name) VALUES(3, 'Ratatat');
 
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(3,2);
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(3,3);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(3,2);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(3,3);
 
 INSERT INTO "albums" (id, title, year, artist_id) VALUES (4, 'Classics', 2006, 3);
 
@@ -107,8 +100,8 @@ INSERT INTO "tracks" (title, number, album_id) VALUES ('Tacobel Canon', 10, 4);
 
 INSERT INTO "artists" (id, name) VALUES(4, 'Daft Punk');
 
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(4,3);
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(4,4);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(4,3);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(4,4);
 
 INSERT INTO "albums" (id, title, year, artist_id) VALUES (5, 'Discovery', 2001, 4);
 
@@ -177,9 +170,9 @@ INSERT INTO "tracks" (title, number, album_id) VALUES ('Contact', 13, 8);
 
 INSERT INTO "artists" (id, name) VALUES(5, 'Seatbelts');
 
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(5,5);
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(5,2);
-INSERT INTO "artists_tags" (artist_id, tag_id) VALUES(5,3);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(5,5);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(5,2);
+INSERT INTO "artists_genres" (artist_id, tag_id) VALUES(5,3);
 
 INSERT INTO "albums" (id, title, year, artist_id) VALUES(9, 'Cowboy Bebop', 1998, 5);
 
@@ -193,4 +186,7 @@ INSERT INTO "tracks" (title, number, album_id) VALUES ('SPACE LION', 7, 9);
 INSERT INTO "tracks" (title, number, album_id) VALUES ('WALTZ for ZIZI', 8, 9);
 INSERT INTO "tracks" (title, number, album_id) VALUES ('PIANO BLACK', 9, 9);
 
-INSERT INTO "plays" (count, track_id) VALUES (1,87);
+ALTER SEQUENCE genres_id_seq RESTART WITH 6;
+ALTER SEQUENCE artists_id_seq RESTART WITH 6;
+ALTER SEQUENCE albums_id_seq RESTART WITH 10;
+ALTER SEQUENCE tracks_id_seq RESTART WITH 94;
