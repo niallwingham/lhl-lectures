@@ -1,58 +1,44 @@
-var niall = {
+var niallInfo = {
   name: 'Niall',
   favouriteColour: 'yellow',
-  // luckyNumbers: [3, Math.pow(2, 2), 62],
-  luckyNumbers: generateLuckyNumbers(),
-  address: {
-    line1: '20 Collier St',
-    apt: '310',
+  luckyNumbers: [ 3, 4, 62 ],
+  printName: printNameInsideObject,
+  printLuckyNumbers: function () {
+    console.log(this.luckyNumbers.join(', '));
   },
-  printName: standalonePrintNameFunction,
-  addLuckyNumber: addLuckyNumber,
-  printLuckyNumbers: printLuckyNumbers,
-  printAddress: printAddress,
 }
 
-function generateLuckyNumbers() {
-  return [Math.ceil(Math.random() * 100)]
+var someColourVariableTheUserEntered = 'blue';
+
+var nylaInfo = {
+  name: 'Nyla',
+  luckyNumbers: [ 7, 9 ],
+  favouriteColour: someColourVariableTheUserEntered,
+  printName: printNameInsideObject,
 }
 
-var kevin = {
-  name: 'Kevin',
-  favouriteColour: 'red',
-  luckyNumbers: [7, 8],
-  address: {
-    line1: '46 Spadina',
-    apt: '4th Floor',
-  },
-  printName: standalonePrintNameFunction,
-  addLuckyNumber: addLuckyNumber,
-  printLuckyNumbers: printLuckyNumbers,
-  printAddress: printAddress,
+var inaraInfo = {
+  name: 'Inara',
+  favouriteColour: 'Lellow',
+  luckyNumbers: [],
 }
 
-function standalonePrintNameFunction(label) {
-  console.log(label + ':')
-  console.log(this.name)
-  console.log()
+function printNameInsideObject(greeting) {
+  console.log(greeting + ', ' + this.name);
 }
 
-function printAddress() {
-  console.log('Address: ')
-  console.log(this.address.apt + ' - ' + this.address.line1 + '\n')
+function printName(personInfo) {
+  console.log(personInfo.name);
 }
 
-function addLuckyNumber() {
-  var newLuckyNumber = Math.ceil(Math.random() * 100)
-  this.luckyNumbers.push(newLuckyNumber)
+function printLuckyNumbers(personInfo) {
+  console.log(personInfo.luckyNumbers.join(', '));
 }
 
-function printLuckyNumbers() {
-  console.log('Lucky Numbers:')
-  console.log(this.luckyNumbers + '\n')
+function addLuckyNumber(personInfo) {
+  newNumber = Math.ceil(Math.random() * 100);
+  personInfo.luckyNumbers.push(newNumber);
 }
 
-niall.printName('My Fancy Label')
-niall.addLuckyNumber()
-niall.printLuckyNumbers()
-kevin.printName('Evil Twin')
+printName(niallInfo);
+printLuckyNumbers(niallInfo);
